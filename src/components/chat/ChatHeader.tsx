@@ -6,12 +6,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AVAILABLE_MODELS, Model } from '@/types/chat';
+import { AVAILABLE_MODELS, Model, ChatMode } from '@/types/chat';
+import { ModeSwitcher } from './ModeSwitcher';
 
 interface ChatHeaderProps {
   title: string;
   selectedModel: Model;
   onModelChange: (model: Model) => void;
+  mode?: ChatMode;
+  employeeId?: string;
+  onModeChange?: (mode: ChatMode) => void;
   onShare?: () => void;
   onDelete?: () => void;
 }
@@ -20,6 +24,9 @@ export function ChatHeader({
   title,
   selectedModel,
   onModelChange,
+  mode,
+  employeeId,
+  onModeChange,
   onShare,
   onDelete,
 }: ChatHeaderProps) {
@@ -52,7 +59,14 @@ export function ChatHeader({
         </DropdownMenu>
       </div>
       
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        {mode && onModeChange && (
+          <ModeSwitcher
+            mode={mode}
+            employeeId={employeeId}
+            onModeChange={onModeChange}
+          />
+        )}
         <Button
           variant="ghost"
           size="sm"

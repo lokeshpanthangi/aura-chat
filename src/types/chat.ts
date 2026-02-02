@@ -1,3 +1,5 @@
+export type ChatMode = 'full' | 'manual';
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -9,6 +11,8 @@ export interface Chat {
   id: string;
   title: string;
   messages: Message[];
+  mode?: ChatMode;
+  employeeId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
-import { Chat, Message, Model, AVAILABLE_MODELS } from '@/types/chat';
+import { Chat, Message, Model, ChatMode, AVAILABLE_MODELS } from '@/types/chat';
 import { mockChats } from '@/data/mockChats';
 import { ChatSidebar, SidebarToggle } from './ChatSidebar';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
+import { ModeSelectionDialog } from './ModeSelectionDialog';
 import { useTheme } from '@/hooks/useTheme';
 
 // Mock AI responses
@@ -21,6 +22,8 @@ export function ChatLayout() {
   const [selectedModel, setSelectedModel] = useState<Model>(AVAILABLE_MODELS[0]);
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showModeDialog, setShowModeDialog] = useState(false);
+  const [pendingChatId, setPendingChatId] = useState<string | null>(null);
 
   const currentChat = chats.find((c) => c.id === currentChatId);
 
@@ -33,9 +36,37 @@ export function ChatLayout() {
       updatedAt: new Date(),
     };
     setChats((prev) => [newChat, ...prev]);
-    setCurrentChatId(newChat.id);
+    setPendingChatId(newChat.id);
+    setShowModeDialog(true);
     setSidebarOpen(false);
   }, []);
+
+  const handleModeSelect = useCallback((mode: ChatMode, employeeId?: string) => {
+    if (pendingChatId) {
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === pendingChatId
+            ? { ...chat, mode, employeeId }
+            : chat
+        )
+      );
+      setCurrentChatId(pendingChatId);
+      setPendingChatId(null);
+    }
+    setShowModeDialog(false);
+  }, [pendingChatId]);
+
+  const handleModeChange = useCallback((mode: ChatMode) => {
+    if (!currentChatId || !currentChat) return;
+    
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.id === currentChatId
+          ? { ...chat, mode }
+          : chat
+      )
+    );
+  }, [currentChatId, currentChat]);
 
   const handleSendMessage = useCallback((content: string) => {
     if (!currentChatId) return;
@@ -145,6 +176,9 @@ export function ChatLayout() {
           title={currentChat?.title || 'New Conversation'}
           selectedModel={selectedModel}
           onModelChange={setSelectedModel}
+          mode={currentChat?.mode}
+          employeeId={currentChat?.employeeId}
+          onModeChange={handleModeChange}
         />
         
         <MessageList
@@ -156,6 +190,11 @@ export function ChatLayout() {
         
         <ChatInput onSend={handleSendMessage} disabled={isTyping} />
       </main>
+
+      <ModeSelectionDialog
+        open={showModeDialog}
+        onSelect={handleModeSelect}
+      />
     </div>
   );
 }
